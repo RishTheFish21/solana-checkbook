@@ -1,0 +1,394 @@
+/* Solana Checkbook: a retro desktop parked in front of a savings bank.
+   The interface is an early-90s window system (Pixelify Sans, 1px ink rules, striped
+   title bars, hard shadows). The check is the one "real" document on the desktop, so it
+   keeps printed type (Libre Caslon), handwriting (Caveat) and a MICR line. */
+
+:root {
+  --ink: #1f1e1a;
+  --win: #fbf8ef;
+  --win-alt: #f1ecdd;
+  --field: #ffffff;
+  --muted: #6b665a;
+  --sky: #c9e3d3;
+  --money: #2f6b4f;
+  --gold: #d8b25a;
+  --focus: #2f6b4f;
+
+  --paper: #eaf3ec;
+  --paper-pattern: rgba(54, 110, 82, 0.07);
+  --paper-rule: #8fae9b;
+  --paper-ink: #1b2a4a;
+  --pen: #1f3a8a;
+
+  --paid: #1e7a4c;
+  --void: #b42318;
+  --post: #9a5b00;
+
+  --pixel: "Pixelify Sans", "Chicago", "Geneva", ui-monospace, monospace;
+  --print: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+  --micr: "Courier New", ui-monospace, monospace;
+
+  --radius: 5px;
+  --shadow: 3px 3px 0 rgba(31, 30, 26, 0.85);
+
+  color-scheme: light;
+  box-sizing: border-box;
+}
+
+/* The scene is daylight on purpose; dark mode only dims the sky a touch. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --sky: #b5d3c1; }
+}
+:root[data-theme="dark"] { --sky: #b5d3c1; }
+
+*, *::before, *::after { box-sizing: inherit; }
+
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--pixel);
+  font-size: 16px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: none;
+}
+
+a { color: inherit; text-underline-offset: 3px; }
+code { font-family: var(--micr); font-size: 0.85em; background: var(--win-alt); border: 1px solid #d6cfbb; padding: 0 0.3em; }
+
+:focus-visible { outline: 2px dotted var(--ink); outline-offset: 2px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- desktop picture ---------- */
+
+.scene { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; }
+
+/* ---------- menu bar ---------- */
+
+.menubar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: stretch; gap: 0;
+  height: 30px; background: var(--win); border-bottom: 1px solid var(--ink);
+  font-size: 14px;
+}
+.menubar-item { display: flex; align-items: center; gap: 8px; padding: 0 14px; white-space: nowrap; }
+.menubar-item + .menubar-item, .menubar-spacer + .menubar-item { border-left: 1px solid var(--ink); }
+.menubar-brand { font-weight: 700; }
+.menubar-net { color: var(--money); }
+.menubar-spacer { flex: 1; }
+
+/* ---------- layout ---------- */
+
+/* Windows start just under the pediment, so the bank front is the masthead.
+   The scene's viewBox is 320x172 from y=8, scaled to cover; the pediment base is y=64. */
+.app { max-width: 1180px; margin: 0 auto; padding: calc(max(17.5vw, 32.5vh) - 22px) 20px 140px; }
+main { padding-top: 24px; }
+
+/* ---------- windows ---------- */
+
+.account, .panel, .register, .check-stage, .dialog {
+  position: relative;
+  background: var(--win);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0 18px 18px;
+}
+
+/* A window's first heading is its title bar: close box, pinstripes, centered title. */
+.account > h2, .panel > h2, .register-head > h2, .stage-title {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 10px;
+  height: 26px; margin: 0 -18px 16px; padding: 0 8px;
+  border-bottom: 1px solid var(--ink);
+  font-family: var(--pixel); font-size: 15px; font-weight: 700; line-height: 1; text-align: center;
+}
+.account > h2::before, .panel > h2::before, .register-head > h2::before, .stage-title::before,
+.account > h2::after, .panel > h2::after, .register-head > h2::after, .stage-title::after {
+  content: ""; height: 11px; min-width: 20px;
+  background: repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 2px);
+}
+.account > h2::before, .panel > h2::before, .register-head > h2::before, .stage-title::before {
+  /* Close box sits on the stripes, with a gap of plain title bar around it. */
+  background:
+    linear-gradient(var(--win), var(--win)) 6px 1px / 9px 9px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 5px 0 / 11px 11px no-repeat,
+    linear-gradient(var(--win), var(--win)) 0 0 / 21px 11px no-repeat,
+    repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 2px);
+}
+
+.dialog { padding: 14px 18px; margin: 0 0 18px; max-width: 520px; }
+
+/* ---------- passbook (account) ---------- */
+
+.ledger {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.6fr);
+  border: 1px solid var(--ink); background: var(--field);
+}
+.ledger-cell { padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ledger-cell + .ledger-cell { border-left: 1px solid var(--ink); }
+.ledger-label { font-size: 14px; color: var(--muted); }
+.ledger-value { font-size: 24px; font-weight: 600; line-height: 1.15; }
+.account-number { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding-top: 4px; }
+
+.account-qr { display: flex; gap: 16px; align-items: center; padding: 16px 0 0; }
+.account-qr img { width: 150px; height: 150px; background: #fff; padding: 6px; border: 1px solid var(--ink); image-rendering: pixelated; }
+.account-qr p { margin: 0; max-width: 34ch; color: var(--muted); }
+
+.steps { margin: 14px 0 0; padding-left: 1.8em; }
+.steps li { padding: 8px 0; border-bottom: 1px dotted #b9b19b; }
+.steps li:last-child { border-bottom: none; padding-bottom: 0; }
+.steps li.done { color: var(--muted); }
+.steps li::marker { font-weight: 700; }
+.step-label { display: inline-block; min-width: 18em; margin-right: 16px; }
+.step-action { display: inline-flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.step-done { color: var(--paid); font-weight: 600; }
+.step-done::before { content: "✓ "; }
+
+/* ---------- forms ---------- */
+
+.desk { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.panel h3 { font-size: 15px; font-weight: 700; margin: 18px 0 8px; }
+.panel p { margin: 0 0 12px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; margin: 0 0 16px; border: 0; padding: 0; }
+.field > span:not(.inline), .field legend { font-size: 14px; font-weight: 600; padding: 0; }
+.inline { display: flex; gap: 10px; align-items: stretch; }
+.inline input { flex: 1; min-width: 0; }
+
+input, textarea {
+  font: inherit; color: var(--ink); background: var(--field);
+  border: 1px solid var(--ink); border-radius: 0; padding: 6px 8px;
+  box-shadow: inset 1px 1px 0 #d9d3c3;
+}
+input:focus, textarea:focus { outline: none; box-shadow: inset 1px 1px 0 #d9d3c3, 0 0 0 2px var(--win), 0 0 0 3px var(--ink); }
+input::placeholder, textarea::placeholder { color: #a39d8e; }
+textarea { resize: vertical; font-family: var(--micr); font-size: 12px; }
+input:disabled { opacity: 0.5; }
+
+.choice { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0; font-weight: 400; }
+.choice input[type="radio"] { accent-color: var(--ink); box-shadow: none; }
+.choice input[type="datetime-local"] { padding: 3px 6px; }
+
+/* Buttons: rounded rectangles; the main action gets the thick "default button" ring. */
+button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  background: var(--field); color: var(--ink);
+  border: 1px solid var(--ink); border-radius: 7px; padding: 5px 16px;
+  box-shadow: 0 0 0 2px var(--win), 0 0 0 4px var(--ink);
+  margin: 4px;
+}
+button:active:not(:disabled) { background: var(--ink); color: var(--win); }
+button:disabled { color: #a39d8e; border-color: #a39d8e; box-shadow: 0 0 0 2px var(--win), 0 0 0 4px #a39d8e; cursor: not-allowed; }
+button.secondary { box-shadow: none; margin: 0; }
+button.secondary:disabled { box-shadow: none; }
+button.danger { box-shadow: none; margin: 0; color: var(--void); border-color: var(--void); padding: 3px 10px; }
+button.danger:active:not(:disabled) { background: var(--void); color: var(--win); }
+button.quiet {
+  background: none; border: none; box-shadow: none; margin: 0; padding: 0;
+  font-weight: 400; color: var(--ink); text-decoration: underline; text-underline-offset: 3px;
+}
+button.quiet:active:not(:disabled) { background: none; color: var(--money); }
+
+.actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 8px 0 12px; }
+
+.note { font-size: 14px; color: var(--muted); margin: 8px 0; }
+.note.warn { color: var(--post); }
+.note.error { color: var(--void); }
+.note.good, .good { color: var(--paid); }
+.bad { color: var(--void); }
+
+.verify dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0 0 12px; padding: 10px 12px; background: var(--field); border: 1px solid var(--ink); }
+.verify dt { font-weight: 600; }
+.verify dd { margin: 0; word-break: break-all; }
+
+.scanner { margin: 0 0 16px; }
+.scanner video { width: 100%; border: 1px solid var(--ink); background: #000; }
+
+/* ---------- the check window ---------- */
+
+.check-stage {
+  container-type: inline-size; position: sticky; top: 46px;
+  /* A fine dot desk behind the document, like an old paint program canvas. */
+  background-color: var(--win-alt);
+  background-image: radial-gradient(rgba(31, 30, 26, 0.18) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+.stage-title { background: var(--win); }
+.check-empty {
+  aspect-ratio: 2.4 / 1; display: grid; place-items: center; text-align: center; padding: 24px;
+  border: 1px dashed var(--ink); background: var(--win); color: var(--muted);
+}
+
+/* ---------- the check ---------- */
+
+.check {
+  position: relative; margin: 0; overflow: hidden;
+  aspect-ratio: 2.4 / 1;
+  display: grid; grid-template-rows: auto auto auto 1fr auto;
+  padding: 3.4cqi 3.8cqi 2.2cqi;
+  color: var(--paper-ink);
+  font-family: var(--print);
+  font-size: 1.75cqi;
+  -webkit-font-smoothing: auto;
+  background-color: var(--paper);
+  /* Security paper: fine wave lines plus a soft rosette. */
+  background-image:
+    repeating-radial-gradient(circle at 78% 42%, transparent 0 0.55cqi, var(--paper-pattern) 0.55cqi 0.7cqi),
+    repeating-linear-gradient(115deg, transparent 0 0.9cqi, var(--paper-pattern) 0.9cqi 1cqi),
+    repeating-linear-gradient(65deg, transparent 0 1.3cqi, var(--paper-pattern) 1.3cqi 1.4cqi);
+  border: 1px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 1.1cqi var(--paper),
+    inset 0 0 0 1.25cqi rgba(30, 74, 55, 0.5),
+    2px 2px 0 rgba(31, 30, 26, 0.85);
+}
+
+.check-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 3cqi; }
+.check-drawer { display: flex; flex-direction: column; }
+.check-drawer-name { font-weight: 700; font-size: 2.1cqi; }
+.check-drawer-bank { font-style: italic; font-size: 1.45cqi; opacity: 0.8; }
+.check-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6cqi; }
+.check-number { font-size: 2cqi; color: var(--void); }
+.check-postdate { font-size: 1.35cqi; color: var(--post); font-weight: 700; }
+
+.check-field { display: flex; align-items: flex-end; gap: 1.2cqi; border-bottom: 1px solid var(--paper-rule); min-height: 4.6cqi; }
+.check-label { font-size: 1.3cqi; line-height: 1.15; padding-bottom: 0.4cqi; white-space: nowrap; }
+.hand { font-family: var(--hand); color: var(--pen); font-size: 3.4cqi; line-height: 1; padding: 0 0.6cqi 0.2cqi; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.check-date { min-width: 22cqi; }
+
+.check-payline { display: flex; align-items: flex-end; gap: 2.4cqi; margin-top: 2.4cqi; }
+.check-payee { flex: 1; min-width: 0; }
+.check-amountbox {
+  display: flex; align-items: center; gap: 0.6cqi; min-width: 20cqi; height: 5.6cqi;
+  border: 1px solid var(--paper-rule); background: rgba(255, 255, 255, 0.55); padding: 0 1cqi;
+}
+.check-dollar { font-size: 2.4cqi; }
+
+.check-words { margin-top: 1.6cqi; justify-content: space-between; }
+.check-words .hand { flex: 1; font-size: 3cqi; }
+.check-dollars { padding-left: 1cqi; }
+
+.check-bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 4cqi; align-self: end; }
+.check-memo { flex: 1; min-width: 0; max-width: 46%; }
+.check-signature {
+  width: 36%; display: flex; justify-content: flex-end; align-items: flex-end;
+  border-bottom: 1px solid var(--paper-rule); min-height: 4.6cqi; position: relative;
+}
+.check-signature img { width: 15cqi; height: 15cqi; background: #fff; padding: 0.5cqi; margin-bottom: 0.6cqi; image-rendering: pixelated; }
+.check-unsigned { font-size: 1.3cqi; opacity: 0.6; font-style: italic; padding-bottom: 0.4cqi; }
+
+.micr { font-family: var(--micr); font-size: 2.1cqi; letter-spacing: 0.25em; margin-top: 1.6cqi; opacity: 0.85; white-space: nowrap; overflow: hidden; }
+
+.stamp {
+  position: absolute; left: 50%; top: 46%;
+  translate: -50% -50%; rotate: -11deg;
+  padding: 0.8cqi 2.4cqi;
+  border: 0.55cqi double currentColor; border-radius: 1cqi;
+  font-family: var(--print); font-weight: 700; font-size: 5.4cqi; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+  opacity: 0.82; mix-blend-mode: multiply; pointer-events: none;
+  animation: stamp-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.stamp-paid { color: var(--paid); }
+.stamp-returned, .stamp-stopped { color: var(--void); }
+.stamp-postdated { color: var(--post); }
+
+@keyframes stamp-in {
+  from { scale: 1.7; opacity: 0; }
+  to { scale: 1; opacity: 0.82; }
+}
+
+/* ---------- register window ---------- */
+
+.register-head { display: contents; }
+.register-head > button { margin: 0 0 14px; }
+.table-wrap { overflow-x: auto; margin: 0 0 18px; background: var(--field); border: 1px solid var(--ink); }
+.table-wrap:last-child { margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; font-weight: 700; padding: 8px 12px; background: var(--win-alt); border-bottom: 1px solid var(--ink); }
+th, td { text-align: left; padding: 7px 12px; white-space: nowrap; }
+th { font-weight: 600; font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--ink); }
+tbody tr:nth-child(even) td { background: #f7f4ea; }
+td.num, th.num { text-align: right; }
+td.empty { color: var(--muted); white-space: normal; }
+.sub { display: block; font-size: 12px; color: var(--post); }
+.row-actions { display: flex; gap: 12px; align-items: center; }
+.status { font-weight: 600; }
+.status-cashed { color: var(--paid); }
+.status-stopped { color: var(--void); }
+.status-outstanding { color: var(--muted); }
+
+/* ---------- dock ---------- */
+
+.dock {
+  position: fixed; left: 50%; bottom: 14px; translate: -50% 0; z-index: 10;
+  display: flex; background: var(--win); border: 1px solid var(--ink); box-shadow: var(--shadow);
+}
+.dock-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 84px; padding: 8px 6px 6px; margin: 0;
+  background: none; border: none; border-radius: 0; box-shadow: none;
+  font-size: 14px; font-weight: 600;
+}
+.dock-item + .dock-item { border-left: 1px solid var(--ink); }
+.dock-item span { padding: 0 6px; }
+.dock-item.active span { background: var(--ink); color: var(--win); }
+.dock-item:active:not(:disabled) { background: var(--win-alt); color: var(--ink); }
+
+.foot {
+  margin: 36px auto 0; max-width: 640px; text-align: center; font-size: 12px;
+  background: var(--win); border: 1px solid var(--ink); padding: 6px 12px;
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  .desk { grid-template-columns: 1fr; }
+  .check-stage { position: static; order: -1; }
+  .ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ledger-cell { border-bottom: 1px solid var(--ink); }
+  .ledger-cell + .ledger-cell { border-left: none; }
+  .ledger-cell:nth-child(even) { border-left: 1px solid var(--ink); }
+  .ledger-account { grid-column: 1 / -1; border-bottom: none; }
+  .step-label { min-width: 0; display: block; margin-bottom: 6px; }
+}
+
+@media (max-width: 700px) {
+  /* Phones: the bank sits at the top at full width; pavement continues below it. */
+  body {
+    background-color: #e6dcc5;
+    background-image: linear-gradient(#d4c8ad 1px, transparent 1px), linear-gradient(90deg, #d4c8ad 1px, transparent 1px);
+    background-size: 24px 9px;
+  }
+  .scene { position: absolute; top: 30px; height: auto; }
+  .app { padding-top: calc(17.5vw * 1.0 + 4px); }
+}
+
+@media (max-width: 560px) {
+  .app { padding-left: 12px; padding-right: 12px; padding-bottom: 120px; }
+  .menubar-date, .menubar-net { display: none; }
+  .account, .panel, .register, .check-stage { padding: 0 12px 14px; }
+  .account > h2, .panel > h2, .register-head > h2, .stage-title { margin: 0 -12px 14px; }
+  .dock { bottom: 10px; }
+  .dock-item { width: 78px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp { animation: none; }
+}
+
+/* ---------- printing: just the check ---------- */
+
+@media print {
+  body { background: #fff; }
+  .scene, .menubar, .dock, .account, .panel, .foot, .stage-title, .app > .dialog { display: none !important; }
+  .app { padding: 0; }
+  main { padding: 0; }
+  .desk { display: block; }
+  .check-stage { position: static; width: 7in; border: none; box-shadow: none; background: none; padding: 0; }
+  .check { box-shadow: none; border: 1px solid #9db5a6; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

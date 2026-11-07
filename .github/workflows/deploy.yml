@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          VITE_RPC_URL: ${{ vars.VITE_RPC_URL }}
+          VITE_MINT: ${{ vars.VITE_MINT }}
+          VITE_MINT_DECIMALS: ${{ vars.VITE_MINT_DECIMALS }}
+          VITE_CURRENCY_LABEL: ${{ vars.VITE_CURRENCY_LABEL }}
+          # Devnet-only demo key. It ends up in the public bundle by design; kept out of the repo text.
+          VITE_DEMO_MINT_AUTHORITY: ${{ secrets.VITE_DEMO_MINT_AUTHORITY }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

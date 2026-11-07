@@ -1,0 +1,38 @@
+{
+  "name": "solana-checkbook",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Stablecoin checks on Solana: post-dating, stop payment, and bounce/retry, built on Anza's Ed25519 Programmatic Signer.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "setup:mint": "tsx scripts/setup-demo-mint.ts",
+    "test": "tsx --test test/*.test.ts",
+    "dev:lan": "vite --host"
+  },
+  "dependencies": {
+    "@solana-program/loader-v3": "0.8.0",
+    "@solana-program/memo": "0.16.0",
+    "@solana-program/system": "0.16.0",
+    "@solana-program/token": "0.18.0",
+    "@solana/kit": "8.5.0",
+    "qr-scanner": "1.4.2",
+    "qrcode": "1.5.4",
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/qrcode": "1.5.5",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "6.1.2",
+    "litesvm": "1.6.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  }
+}

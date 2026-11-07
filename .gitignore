@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env.local
+.keys/
+programs/fixtures/*.so
+.claude/
+.DS_Store
