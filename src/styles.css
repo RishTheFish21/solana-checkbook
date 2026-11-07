@@ -139,11 +139,18 @@ main { padding-top: 24px; }
 .account-qr p { margin: 0; max-width: 34ch; color: var(--muted); }
 
 .steps { margin: 14px 0 0; padding-left: 1.8em; }
-.steps li { padding: 8px 0; border-bottom: 1px dotted #b9b19b; }
+.welcome { margin: 0 0 14px; padding: 10px 14px; background: var(--field); border: 1px dashed var(--ink); }
+.welcome p { margin: 0; }
+.welcome p + p { margin-top: 6px; color: var(--muted); }
+
+.steps li { padding: 10px 0; border-bottom: 1px dotted #b9b19b; }
+.step-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.step-text { flex: 1 1 18em; max-width: 34em; display: flex; flex-direction: column; gap: 2px; }
+.step-help { font-size: 14px; color: var(--muted); }
 .steps li:last-child { border-bottom: none; padding-bottom: 0; }
 .steps li.done { color: var(--muted); }
 .steps li::marker { font-weight: 700; }
-.step-label { display: inline-block; min-width: 18em; margin-right: 16px; }
+.step-label { font-weight: 600; }
 .step-action { display: inline-flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 .step-done { color: var(--paid); font-weight: 600; }
 .step-done::before { content: "✓ "; }
@@ -354,7 +361,6 @@ td.empty { color: var(--muted); white-space: normal; }
   .ledger-cell + .ledger-cell { border-left: none; }
   .ledger-cell:nth-child(even) { border-left: 1px solid var(--ink); }
   .ledger-account { grid-column: 1 / -1; border-bottom: none; }
-  .step-label { min-width: 0; display: block; margin-bottom: 6px; }
 }
 
 @media (max-width: 700px) {

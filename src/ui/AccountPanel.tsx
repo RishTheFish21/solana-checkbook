@@ -36,6 +36,7 @@ export function AccountPanel({ me, balances, refresh }: Props) {
   const steps = [
     {
       label: "Get devnet SOL for network fees",
+      help: "Every Solana transaction costs a tiny fee in SOL. Copy your address, paste it into the faucet with devnet selected, and it will send you free test SOL.",
       done: (balances?.sol ?? 0n) > 10_000_000n,
       action: (
         <>
@@ -52,6 +53,7 @@ export function AccountPanel({ me, balances, refresh }: Props) {
     },
     {
       label: "Open your checking account",
+      help: "This creates the account that holds your money. Nothing can leave it unless it's a check you signed.",
       done: balances?.checking !== undefined,
       action: (
         <button type="button" disabled={!!busy || !MINT} onClick={() => run("Opening accounts", async () => { fail(await openAccounts(me)); await refresh(); })}>
@@ -61,6 +63,7 @@ export function AccountPanel({ me, balances, refresh }: Props) {
     },
     {
       label: "Order checks",
+      help: "Each check gets its own small account on-chain, which is what stops it from being cashed twice. This sets up four blank checks.",
       done: blankCount > 0,
       action: (
         <button type="button" disabled={!!busy} onClick={() => run("Ordering checks", async () => {
@@ -74,6 +77,7 @@ export function AccountPanel({ me, balances, refresh }: Props) {
     },
     {
       label: `Add ${CURRENCY_LABEL} to checking`,
+      help: `This gives you 100 free ${CURRENCY_LABEL} to write checks with. It's devnet test money, so it isn't worth anything.`,
       done: (balances?.checking ?? 0n) > 0n,
       action: (
         <button type="button" disabled={!!busy || balances?.checking === undefined} onClick={() => run("Adding money", async () => { fail(await getDemoDollars(me, 100)); await refresh(); })}>
@@ -87,6 +91,16 @@ export function AccountPanel({ me, balances, refresh }: Props) {
   return (
     <section className="account" aria-label="Your account">
       <h2>Passbook</h2>
+      {!allDone ? (
+        <div className="welcome">
+          <p>
+            <strong>Welcome!</strong> Your browser just created a devnet wallet for you, so there's nothing to sign up
+            for. Before you can write your first check, go through the four steps below once. It takes about two minutes,
+            and everything runs on free test money.
+          </p>
+          <p>If you're only here to deposit a check someone sent you, you just need step 1.</p>
+        </div>
+      ) : null}
       <div className="ledger">
         <div className="ledger-cell">
           <span className="ledger-label">Checking</span>
@@ -142,8 +156,13 @@ export function AccountPanel({ me, balances, refresh }: Props) {
         <ol className="steps">
           {steps.map((s) => (
             <li key={s.label} className={s.done ? "done" : ""}>
-              <span className="step-label">{s.label}</span>
-              {s.done ? <span className="step-done">Done</span> : <span className="step-action">{s.action}</span>}
+              <div className="step-row">
+                <div className="step-text">
+                  <span className="step-label">{s.label}</span>
+                  {s.done ? null : <span className="step-help">{s.help}</span>}
+                </div>
+                {s.done ? <span className="step-done">Done</span> : <span className="step-action">{s.action}</span>}
+              </div>
             </li>
           ))}
         </ol>
