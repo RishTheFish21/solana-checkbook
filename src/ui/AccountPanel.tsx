@@ -8,7 +8,6 @@ import {
   moveToChecking,
   openAccounts,
   orderChecks,
-  requestAirdrop,
   type Balances,
 } from "../lib/bank";
 import { addBlanks, getBlanks, reserveCheckNumbers } from "../lib/storage";
@@ -24,6 +23,7 @@ export function AccountPanel({ me, balances, refresh }: Props) {
   // Read on every render; App re-renders after any action via refresh().
   const blankCount = getBlanks().length;
   const [copied, setCopied] = useState(false);
+  const [copiedForFaucet, setCopiedForFaucet] = useState(false);
 
   useEffect(() => {
     QRCode.toDataURL(me.address, { margin: 1, width: 220 }).then(setQr);
@@ -39,10 +39,14 @@ export function AccountPanel({ me, balances, refresh }: Props) {
       done: (balances?.sol ?? 0n) > 10_000_000n,
       action: (
         <>
-          <button type="button" disabled={!!busy} onClick={() => run("Requesting SOL", async () => { await requestAirdrop(me.address); await refresh(); })}>
-            Request 1 SOL
+          {/* Solana closed the RPC airdrop on devnet (HTTP 410), so send people to the web faucet. */}
+          <button type="button" onClick={async () => { await navigator.clipboard.writeText(me.address); setCopiedForFaucet(true); }}>
+            {copiedForFaucet ? "Address copied" : "Copy my address"}
           </button>
-          <a href="https://faucet.solana.com" target="_blank" rel="noreferrer">or use the faucet</a>
+          <a href="https://faucet.solana.com" target="_blank" rel="noreferrer">Open the faucet</a>
+          <button type="button" className="quiet" disabled={!!busy} onClick={() => run("Checking balance", refresh)}>
+            I got it, check again
+          </button>
         </>
       ),
     },
