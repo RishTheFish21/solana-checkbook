@@ -98,9 +98,3 @@ Anza's signer programs are pre-audit, so their interface may still change. The s
 The most useful next step would be **fee sponsorship** through a paymaster such as Kora, so that people receiving checks never need to hold SOL at all. After that, **certified checks** would lock the amount in escrow at signing time, which protects the payee the same way a bank's certified check does.
 
 Beyond those, it would be good to support **hardware-wallet signing** once wallets can sign these messages, to add a "void after" date to printed checks using Lighthouse's `LessThanOrEqual` assertion, and to let employers write a batch of post-dated **payroll** checks in one go.
-
-## Credits
-
-- Ed25519 Programmatic Signer and its JS client: Anza / solana-program (Apache-2.0)
-- Lighthouse assertion program: Jac0xb (MIT)
-- gitteri/nonce-replacement, used as a reference for the devnet program IDs and flow
